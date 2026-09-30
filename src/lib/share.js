@@ -13,16 +13,47 @@ export async function copyToClipboard(text) {
     await navigator.clipboard.writeText(text)
     return true
   } catch {
-    // Respaldo para navegadores o contextos sin Clipboard API (HTTP, iframes).
+    // Respaldo para contextos sin Clipboard API (HTTP, iframes, Safari antiguo).
     const textarea = document.createElement('textarea')
     textarea.value = text
-    textarea.setAttribute('readonly', '')
-    textarea.style.position = 'fixed'
-    textarea.style.opacity = '0'
+    textarea.setAttribute('readonly', '') // evita que iOS abra el teclado
+    Object.assign(textarea.style, { position: 'fixed', top: '0', opacity: '0', fontSize: '16px' }) // 16px evita el zoom en iOS
     document.body.appendChild(textarea)
     textarea.select()
+    textarea.setSelectionRange(0, text.length) // iOS ignora select() sin esto
     const ok = document.execCommand('copy')
     document.body.removeChild(textarea)
     return ok
+  }
+}
+
+/** Hoja de compartir nativa (iOS/Android). Devuelve false si no está disponible o se canceló. */
+export const canNativeShare = () => typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+
+export async function nativeShare(url) {
+  try {
+    await navigator.share({
+      title: 'EcoPulse · Calculadora de Huella de Carbono',
+      text: '¿Cuánto pesa tu huella en el planeta? Descúbrelo en 2 minutos 🌱',
+      url,
+    })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/** Pantalla completa con prefijo WebKit (iPad). El iPhone no la soporta. */
+export const canFullscreen = () =>
+  typeof document !== 'undefined' && Boolean(document.fullscreenEnabled || document.webkitFullscreenEnabled)
+
+export const isFullscreen = () => Boolean(document.fullscreenElement || document.webkitFullscreenElement)
+
+export function toggleFullscreen() {
+  if (isFullscreen()) {
+    ;(document.exitFullscreen || document.webkitExitFullscreen)?.call(document)
+  } else {
+    const el = document.documentElement
+    ;(el.requestFullscreen || el.webkitRequestFullscreen)?.call(el)
   }
 }

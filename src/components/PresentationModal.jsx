@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
-import { AlertTriangle, Check, Copy, Maximize2, Minimize2, Smartphone, X } from 'lucide-react'
-import { copyToClipboard, getShareUrl, isLocalUrl } from '../lib/share'
+import { AlertTriangle, Check, Copy, Maximize2, Minimize2, Share, Smartphone, X } from 'lucide-react'
+import {
+  canFullscreen,
+  canNativeShare,
+  copyToClipboard,
+  getShareUrl,
+  isFullscreen,
+  isLocalUrl,
+  nativeShare,
+  toggleFullscreen,
+} from '../lib/share'
 
 export default function PresentationModal({ open, onClose }) {
   const [copied, setCopied] = useState(false)
@@ -14,13 +23,15 @@ export default function PresentationModal({ open, onClose }) {
     if (!open) return
     closeRef.current?.focus()
     const onKey = (e) => e.key === 'Escape' && onClose()
-    const onFullscreen = () => setFullscreen(Boolean(document.fullscreenElement))
+    const onFullscreen = () => setFullscreen(isFullscreen())
     window.addEventListener('keydown', onKey)
     document.addEventListener('fullscreenchange', onFullscreen)
+    document.addEventListener('webkitfullscreenchange', onFullscreen)
     document.body.style.overflow = 'hidden'
     return () => {
       window.removeEventListener('keydown', onKey)
       document.removeEventListener('fullscreenchange', onFullscreen)
+      document.removeEventListener('webkitfullscreenchange', onFullscreen)
       document.body.style.overflow = ''
     }
   }, [open, onClose])
@@ -35,24 +46,25 @@ export default function PresentationModal({ open, onClose }) {
 
   const handleCopy = async () => setCopied(await copyToClipboard(url))
 
-  const toggleFullscreen = () => {
-    if (document.fullscreenElement) document.exitFullscreen?.()
-    else document.documentElement.requestFullscreen?.()
-  }
-
   return (
     <div
-      className="fixed inset-0 z-50 grid animate-fade-in place-items-center overflow-y-auto bg-slate-950/80 p-4 backdrop-blur-2xl"
+      className="fixed inset-0 z-50 grid animate-fade-in place-items-center overflow-y-auto overscroll-contain bg-slate-950/80 p-4 backdrop-blur-2xl"
+      style={{
+        paddingTop: 'max(1rem, env(safe-area-inset-top))',
+        paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+      }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="presentation-title"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="glass relative w-full max-w-4xl animate-scale-in p-6 sm:p-12">
+      <div className="glass relative w-full max-w-4xl animate-scale-in p-6 pt-16 sm:p-12">
         <div className="absolute right-4 top-4 flex gap-2">
-          <button type="button" onClick={toggleFullscreen} className="btn-ghost p-2.5" aria-label="Pantalla completa">
-            {fullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
-          </button>
+          {canFullscreen() && (
+            <button type="button" onClick={toggleFullscreen} className="btn-ghost p-2.5" aria-label="Pantalla completa">
+              {fullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+            </button>
+          )}
           <button ref={closeRef} type="button" onClick={onClose} className="btn-ghost p-2.5" aria-label="Cerrar">
             <X className="h-5 w-5" />
           </button>
@@ -104,6 +116,12 @@ export default function PresentationModal({ open, onClose }) {
                 )}
               </button>
             </div>
+
+            {canNativeShare() && (
+              <button type="button" onClick={() => nativeShare(url)} className="btn-ghost mt-3 w-full sm:w-auto">
+                <Share className="h-5 w-5" /> Compartir por WhatsApp, AirDrop…
+              </button>
+            )}
 
             {isLocalUrl(url) && (
               <p className="mt-4 flex items-start gap-2 text-left text-sm text-yellow-300/90">

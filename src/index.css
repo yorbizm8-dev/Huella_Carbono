@@ -8,8 +8,24 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  html,
   body {
-    @apply min-h-screen bg-slate-950 font-sans text-slate-100 antialiased;
+    /* Evita el "rebote" que muestra fondo blanco al hacer scroll en iOS */
+    @apply bg-slate-950;
+    overscroll-behavior-y: none;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply min-h-screen font-sans text-slate-100 antialiased;
+    min-height: 100dvh;
+    /* Respeta el notch / Dynamic Island y la barra de inicio del iPhone */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  button,
+  label {
+    touch-action: manipulation; /* elimina el retardo de doble toque en iOS */
   }
 
   ::selection {

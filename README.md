@@ -56,6 +56,21 @@ Por defecto el QR apunta a la URL actual del navegador. Si quieres fijar otra (p
 crea la variable de entorno `VITE_PUBLIC_URL` en Vercel (*Settings → Environment Variables*) o en un archivo `.env`
 local (ver `.env.example`).
 
+## 🍎 iPhone / iPad (iOS)
+
+La app funciona directamente en **Safari** (iOS 15.4+) sin instalar nada. Además está preparada como **PWA**:
+
+1. Abre la URL de Vercel en Safari.
+2. Toca **Compartir** → **Agregar a pantalla de inicio**.
+3. Se abre a pantalla completa, con ícono propio y sin barra de Safari.
+
+Adaptaciones incluidas: respeto del notch / Dynamic Island (`safe-area-inset`), sin zoom ni retardo al tocar,
+sin rebote blanco al hacer scroll, hoja de compartir nativa (AirDrop, WhatsApp…), copiado compatible con Safari,
+y animaciones pesadas desactivadas en pantallas pequeñas.
+
+> Nota: el botón de pantalla completa solo aparece en iPad/escritorio, porque el iPhone no lo permite.
+> Para probar desde el iPhone en local, usa la URL de red que muestra `npm run dev` (misma Wi‑Fi).
+
 ## 📁 Estructura
 
 ```
